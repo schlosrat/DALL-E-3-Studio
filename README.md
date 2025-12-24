@@ -30,7 +30,8 @@ This application requires an OpenAI API key to function. Using the API is often 
 3. **Generate a Key:** Go to the API Keys section in your dashboard, click "Create new secret key", and copy it immediately. You can use this key immediately by pasting it into this application, or you can save it (securely) in a text file on your computer for later use.
     * *NOTE: Treat any OpenAI API Key you generate like a password in that anyone who has it can use the OpenAI API to create content using your funds.*
     * For security purposes, you may want to **Delete** the key from your OpenAI account once you're done using it for a session. Deleting a key doesn't impact your funds balance. You can always generate a new, fresh key anytime you need one by repeating this step. If you want to save the key on your computer for later reuse, it's recommended that you store it securely in a password manager or other similar tool.
-6. **Set Limits:** To prevent unexpected charges, you can set a "Hard Limit" in **Settings > Limits** to cap your monthly spending. This is especially useful if you've configured OpenAI to automatically charge your card when your balance is low. Alternatively, you can configure your OpenAI API account to only refill your credits when you log in and do this manually.
+6. **Set Limits:** To prevent unexpected charges, you can set a "Hard Limit" in **Settings > Limits** to cap your monthly spending.
+    * This is especially useful if you've configured OpenAI to charge your card when your balance is low automatically. Alternatively, you can configure your OpenAI API account to only refill your credits when you log in and do this manually.
 
 ## Setup Instructions
 1. Create a Virtual Environment
