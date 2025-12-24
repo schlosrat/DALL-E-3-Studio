@@ -1,4 +1,5 @@
 # DALL-E 3 Studio
+[![Example GUI screenshot](Images/2025-12-24_10_17_47-DALL-E_3_Studio.png)](Images/2025-12-24_10_17_47-DALL-E_3_Studio.png)
 A lightweight Python-based desktop application that provides a graphical user interface (GUI) for generating images using OpenAI's DALL-E 3 model. This tool allows users to customize image quality, aspect ratio, manage session history, and save high-resolution images locally.
 
 ## Features
