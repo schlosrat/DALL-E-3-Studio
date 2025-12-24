@@ -105,6 +105,21 @@ For users who generate a few dozen images a month, the API is significantly chea
 
 *Note: Pricing is set by OpenAI and is subject to change. You can always check your current spending in the [OpenAI Usage Dashboard](https://platform.openai.com/usage).*
 
+## Security
+Your privacy and the security of your credentials are a top priority. This application is designed to run entirely on your local machine with the following security principles:
+
+* **Local Execution:** All application code executes solely on your local computer; no third-party servers (other than OpenAI) are involved in the generation process.
+
+* **Credential Privacy:** Your OpenAI API Key is never stored, logged, or shared by this application. It is only held in active memory during your session to facilitate secure communication with OpenAI.
+
+* **Encrypted Transmission:** All calls to the DALL-E API for image generation and retrieval are made over secure, encrypted HTTPS connections.
+
+* **Data Sovereignty:** Your prompts and the resulting images remain on your local system. The application does not maintain an external database or "phone home" with your creative content.
+
+* **No Hidden Persistence:** Once the application is closed, the session history—including your API key and prompts—is cleared from the system's active memory.
+
+**Recommendation:** For maximum security, treat your API key like a password. Avoid hardcoding it into the source code and always use the masked input field provided in the GUI.
+
 ## License
 This project is licensed under the MIT License.
 
