@@ -10,12 +10,17 @@ class DalleApp:
     def __init__(self, root):
         self.root = root
         self.root.title("DALL-E 3 Studio")
-        self.root.geometry("1150x850")
+        self.root.geometry("1150x900")
 
         self.history = []
         self.current_img_data = None
         self.quality_var = tk.StringVar(value="standard")
         self.size_var = tk.StringVar(value="1024x1024")
+        
+        # New variables for Seed and Style
+        self.seed_var = tk.StringVar(value="")
+        self.use_seed_var = tk.BooleanVar(value=False)
+        self.style_var = tk.StringVar(value="")
 
         self.paned = tk.PanedWindow(root, orient="horizontal", sashwidth=4)
         self.paned.pack(fill="both", expand=True)
@@ -28,22 +33,39 @@ class DalleApp:
         self.api_entry = tk.Entry(left_frame, width=60, show="*")
         self.api_entry.pack(fill="x", pady=(0, 10))
 
-        # --- REDESIGNED SETTINGS PANES ---
+        # --- SETTINGS PANES ---
         settings_container = tk.Frame(left_frame)
         settings_container.pack(fill="x", pady=5)
 
-        # 1. Size (Quality) Pane
-        size_pane = tk.LabelFrame(settings_container, text="Size", padx=10, pady=10)
+        size_pane = tk.LabelFrame(settings_container, text="Quality", padx=10, pady=10)
         size_pane.pack(side="left", fill="both", expand=True, padx=(0, 5))
         ttk.Radiobutton(size_pane, text="Standard", variable=self.quality_var, value="standard").pack(side="left", padx=5)
         ttk.Radiobutton(size_pane, text="HD", variable=self.quality_var, value="hd").pack(side="left", padx=5)
 
-        # 2. Aspect Ratio Pane
         aspect_pane = tk.LabelFrame(settings_container, text="Aspect Ratio", padx=10, pady=10)
         aspect_pane.pack(side="left", fill="both", expand=True, padx=(5, 0))
         ttk.Radiobutton(aspect_pane, text="Square", variable=self.size_var, value="1024x1024").pack(side="left", padx=5)
         ttk.Radiobutton(aspect_pane, text="Portrait", variable=self.size_var, value="1024x1792").pack(side="left", padx=5)
         ttk.Radiobutton(aspect_pane, text="Landscape", variable=self.size_var, value="1792x1024").pack(side="left", padx=5)
+
+        # --- NEW: ARTISTIC CONTROLS (Style and Seed) ---
+        art_pane = tk.LabelFrame(left_frame, text="Artistic Controls", padx=10, pady=10)
+        art_pane.pack(fill="x", pady=10)
+
+        tk.Label(art_pane, text="In The Style Of:").grid(row=0, column=0, sticky="w")
+        self.style_entry = tk.Entry(art_pane, textvariable=self.style_var)
+        self.style_entry.grid(row=0, column=1, columnspan=2, sticky="ew", padx=5)
+
+        tk.Label(art_pane, text="Seed:").grid(row=1, column=0, sticky="w", pady=(5, 0))
+        # Validation for integer only
+        vcmd = (self.root.register(self.validate_seed), '%P')
+        self.seed_entry = tk.Entry(art_pane, textvariable=self.seed_var, validate="key", validatecommand=vcmd)
+        self.seed_entry.grid(row=1, column=1, sticky="ew", padx=5, pady=(5, 0))
+        
+        self.seed_check = tk.Checkbutton(art_pane, text="Use Seed", variable=self.use_seed_var)
+        self.seed_check.grid(row=1, column=2, padx=5, pady=(5, 0))
+        
+        art_pane.columnconfigure(1, weight=1)
 
         tk.Label(left_frame, text="Prompt:", font=("Arial", 10, "bold")).pack(anchor="w", pady=(10, 0))
         self.prompt_text = tk.Text(left_frame, height=4)
@@ -67,37 +89,69 @@ class DalleApp:
         self.paned.add(right_frame, width=400)
 
         tk.Label(right_frame, text="Session History", font=("Arial", 12, "bold"), bg="#f8f9fa").pack()
-
         self.history_listbox = tk.Listbox(right_frame, font=("Arial", 9))
         self.history_listbox.pack(fill="both", expand=True, pady=5)
         self.history_listbox.bind("<<ListboxSelect>>", self.on_history_select)
 
-        # --- CLEAR HISTORY BUTTON ---
         self.clear_button = tk.Button(right_frame, text="Clear History", command=self.clear_history, bg="#dc3545", fg="white")
         self.clear_button.pack(fill="x", pady=5)
 
+    def validate_seed(self, P):
+        if P == "" or P.isdigit():
+            return True
+        return False
+
     def on_generate_click(self):
         api_key = self.api_entry.get().strip()
-        prompt = self.prompt_text.get("1.0", tk.END).strip()
-        if not api_key or not prompt: return
+        user_prompt = self.prompt_text.get("1.0", tk.END).strip()
+        style_prefix = self.style_var.get().strip()
+        
+        if not api_key or not user_prompt: return
+
+        # Construct prompt with style prefix if available
+        full_prompt = f"{style_prefix} {user_prompt}".strip() if style_prefix else user_prompt
 
         self.gen_button.config(state="disabled")
         self.progress.start(10)
-        threading.Thread(target=self.generate_image, args=(api_key, prompt)).start()
+        
+        # Determine if we pass a seed parameter
+        seed_to_use = None
+        if self.use_seed_var.get() and self.seed_var.get().isdigit():
+            seed_to_use = int(self.seed_var.get())
 
-    def generate_image(self, api_key, prompt):
+        threading.Thread(target=self.generate_image, args=(api_key, full_prompt, seed_to_use)).start()
+
+    def generate_image(self, api_key, prompt, seed):
         try:
             client = OpenAI(api_key=api_key)
-            response = client.images.generate(
-                model="dall-e-3", prompt=prompt,
-                size=self.size_var.get(), quality=self.quality_var.get(), n=1
-            )
+            
+            # API Call Parameters
+            params = {
+                "model": "dall-e-3",
+                "prompt": prompt,
+                "size": self.size_var.get(),
+                "quality": self.quality_var.get(),
+                "n": 1
+            }
+            if seed is not None:
+                params["seed"] = seed
+
+            response = client.images.generate(**params)
+            
+            # Retrieve the revised prompt and seed from the DALL-E response
+            final_seed = response.data[0].seed
             raw_data = requests.get(response.data[0].url).content
+            
             img = Image.open(BytesIO(raw_data))
             img.thumbnail((650, 500), Image.Resampling.LANCZOS)
             photo = ImageTk.PhotoImage(img)
 
-            new_entry = {"prompt": prompt, "photo": photo, "raw": raw_data}
+            new_entry = {
+                "prompt": prompt, 
+                "photo": photo, 
+                "raw": raw_data, 
+                "seed": final_seed
+            }
             self.history.insert(0, new_entry)
             self.root.after(0, self.update_ui_with_new, new_entry)
         except Exception as e:
@@ -109,6 +163,11 @@ class DalleApp:
         self.progress.stop()
         self.gen_button.config(state="normal")
         self.save_button.config(state="normal")
+        
+        # Update the seed field with the returned seed from DALL-E
+        if not self.use_seed_var.get():
+            self.seed_var.set(str(entry["seed"]))
+            
         self.history_listbox.insert(0, f"[{len(self.history)}] {entry['prompt'][:35]}...")
         self.display_entry(entry)
 
@@ -123,9 +182,11 @@ class DalleApp:
         self.current_img_data = entry["raw"]
         self.prompt_text.delete("1.0", tk.END)
         self.prompt_text.insert("1.0", entry["prompt"])
+        # Display the seed associated with this historical image
+        if not self.use_seed_var.get():
+            self.seed_var.set(str(entry.get("seed", "")))
 
     def clear_history(self):
-        """Wipes the history list and clears UI elements."""
         if messagebox.askyesno("Clear History", "Delete all generated images in this session?"):
             self.history.clear()
             self.history_listbox.delete(0, tk.END)
@@ -133,6 +194,8 @@ class DalleApp:
             self.image_display.image = None
             self.save_button.config(state="disabled")
             self.prompt_text.delete("1.0", tk.END)
+            if not self.use_seed_var.get():
+                self.seed_var.set("")
 
     def save_image(self):
         if not self.current_img_data: return
