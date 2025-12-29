@@ -84,9 +84,29 @@ The GUI is divided into two main sections: Generation Controls (Left) and Sessio
 * **API Key:** Enter your OpenAI Secret Key here. Characters are masked for security.
 * **Size Pane:** Choose between Standard (faster/cheaper) and HD (greater detail).
 * **Aspect Ratio Pane:** Select your desired output format (Square, Portrait, or Landscape).
-* **Prompt:** Enter a detailed description of the image you want to create.
+* **In The Style Of:** Enter any optional style directive text to be prepended to the prompt describing the subject/image. E.g., "An oil painting of ", "An image in the style of [a well-known artist] depicting ", etc.
+* **Prompt:** Enter a detailed description of the image you want to create. This text will follow any style directive text entered above.
 * **Generate:** Click to start. The Progress Bar will indicate active generation.
 * **Save Current:** Saves the currently displayed image as a PNG file.
+
+### In The Style Of
+This input field allows the user to include style notes that will be used at the start of the prompt, which are separate from the detailed description of the desired image content in the Prompt field. This part of the prompt can be used when you wish to generate multiple images in a consistent style so that you only need to make changes to the Prompt input field to get different subjects in a more or less consistent style. As with any prompt to an AI tool, the better you can describe the style you want, the more likely you'll be to get a consistent output. Nevertheless, using the same text in both the In The Style Of and the Prompt input fields will still generate different images each time you press the Generate button.
+
+#### Well-Known Artist Examples:
+* Classic & Foundational Artists (70s-90s)
+    * Frank Frazetta: A titan of fantasy art, known for his raw, powerful depictions of Conan and monsters, influencing the entire genre.
+    * Michael Whelan: Celebrated for intricate, award-winning covers for epic fantasy novels and RPGs like Dragonlance.
+    * Boris Vallejo & Julie Bell: Masters of heroic fantasy and muscular figures, popular on book covers and RPG products.
+    * Keith Parkinson: Key TSR artist (D&D) known for powerful, realistic depictions, especially Dragonlance.
+    * Dave Trampier: Famous for the original AD&D Player's Handbook cover and iconic Dungeon Master's Screen art, a legendary figure.
+    * Erol Otus & John Blanche: Essential for early D&D and Warhammer, creating unique, sometimes bizarre, iconic fantasy worlds.
+    * Larry Elmore: Another cornerstone of early D&D, known for bright, heroic fantasy scenes. 
+* Influential & Modern Artists
+    * Wayne Reynolds: Known for dynamic, action-packed art, especially for Pathfinder and modern D&D.
+    * Gerald Brom (Brom): Dark fantasy pioneer, creating moody, gothic worlds.
+    * Clyde Caldwell & Jim Holloway: Key artists for early D&D modules and supplements.
+    * Todd Lockwood: Known for dragons and rich fantasy illustrations, particularly for Forgotten Realms.
+    * Miguel Coimbra & Carl Critchlow: Prominent figures in modern publishing, working across many systems.
 
 ### Session History
 * **History List:** Every successful generation is added here. Clicking an entry reloads that image and its original prompt.
