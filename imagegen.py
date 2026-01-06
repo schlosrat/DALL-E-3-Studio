@@ -1,198 +1,202 @@
 import tkinter as tk
-from tkinter import messagebox, filedialog, ttk
+from tkinter import ttk, scrolledtext, messagebox, filedialog
+import openai
 import threading
 import requests
-from io import BytesIO
 from PIL import Image, ImageTk
-from openai import OpenAI
+import io
+import os
 
-class DalleApp:
+class Dalle3Studio:
     def __init__(self, root):
         self.root = root
         self.root.title("DALL-E 3 Studio")
-        self.root.geometry("1150x950")
+        self.root.geometry("1000x700")
 
         self.history = []
-        self.current_img_data = None
+        self.current_image = None
+
+        # Main Layout
+        self.main_paned = tk.PanedWindow(root, orient=tk.HORIZONTAL)
+        self.main_paned.pack(fill="both", expand=True)
+
+        self.left_frame = tk.Frame(self.main_paned, padx=10, pady=10)
+        self.right_frame = tk.Frame(self.main_paned, padx=10, pady=10)
+
+        self.main_paned.add(self.left_frame, stretch="always")
+        self.main_paned.add(self.right_frame, width=300)
+
+        self.create_left_widgets()
+        self.create_right_widgets()
+
+    def create_left_widgets(self):
+        # API Key
+        tk.Label(self.left_frame, text="OpenAI API Key:").pack(anchor="w")
+        self.api_key_entry = tk.Entry(self.left_frame, show="*", width=50)
+        self.api_key_entry.pack(fill="x", pady=(0, 10))
+
+        # Quality and Aspect Ratio Frame
+        options_frame = tk.Frame(self.left_frame)
+        options_frame.pack(fill="x", pady=5)
+
+        # Quality
+        q_frame = tk.LabelFrame(options_frame, text="Quality", padx=5, pady=5)
+        q_frame.pack(side="left", fill="both", expand=True, padx=(0, 5))
         self.quality_var = tk.StringVar(value="standard")
+        tk.Radiobutton(q_frame, text="Standard", variable=self.quality_var, value="standard").pack(side="left")
+        tk.Radiobutton(q_frame, text="HD", variable=self.quality_var, value="hd").pack(side="left")
+
+        # Aspect Ratio
+        ar_frame = tk.LabelFrame(options_frame, text="Aspect Ratio", padx=5, pady=5)
+        ar_frame.pack(side="left", fill="both", expand=True)
         self.size_var = tk.StringVar(value="1024x1024")
-        self.style_var = tk.StringVar(value="")
+        tk.Radiobutton(ar_frame, text="Square", variable=self.size_var, value="1024x1024").pack(side="left")
+        tk.Radiobutton(ar_frame, text="Portrait", variable=self.size_var, value="1024x1792").pack(side="left")
+        tk.Radiobutton(ar_frame, text="Landscape", variable=self.size_var, value="1792x1024").pack(side="left")
 
-        self.paned = tk.PanedWindow(root, orient="horizontal", sashwidth=4)
-        self.paned.pack(fill="both", expand=True)
+        # --- NEW PROMPT PANEL ---
+        prompt_panel = tk.LabelFrame(self.left_frame, text="Prompt Panel", padx=10, pady=10)
+        prompt_panel.pack(fill="both", expand=True, pady=10)
 
-        # LEFT SIDE: Controls
-        left_frame = tk.Frame(self.paned, padx=20, pady=10)
-        self.paned.add(left_frame, width=700)
+        # Style Block
+        tk.Label(prompt_panel, text="Artistic Style Block:").pack(anchor="w")
+        self.style_input = scrolledtext.ScrolledText(prompt_panel, height=4, font=("Arial", 10))
+        self.style_input.pack(fill="x", pady=(0, 10))
+        # Insert default for Daggerheart if desired
+        self.style_input.insert("1.0", "dark fantasy digital painting style, rpg concept art, dramatic chiaroscuro lighting, deep shadows, rich painterly brushstrokes")
 
-        tk.Label(left_frame, text="OpenAI API Key:", font=("Arial", 10, "bold")).pack(anchor="w")
-        self.api_entry = tk.Entry(left_frame, width=60, show="*")
-        self.api_entry.pack(fill="x", pady=(0, 10))
+        # Subject
+        tk.Label(prompt_panel, text="Subject Description:").pack(anchor="w")
+        self.subject_input = scrolledtext.ScrolledText(prompt_panel, height=6, font=("Arial", 10))
+        self.subject_input.pack(fill="both", expand=True, pady=(0, 10))
 
-        # --- SETTINGS PANES ---
-        settings_container = tk.Frame(left_frame)
-        settings_container.pack(fill="x", pady=5)
+        # Toggle for Placement
+        toggle_frame = tk.Frame(prompt_panel)
+        toggle_frame.pack(anchor="w")
+        tk.Label(toggle_frame, text="Style Placement:").pack(side="left")
+        self.placement_var = tk.BooleanVar(value=True) # True = Leading, False = Trailing
+        tk.Radiobutton(toggle_frame, text="Leading", variable=self.placement_var, value=True).pack(side="left", padx=5)
+        tk.Radiobutton(toggle_frame, text="Trailing", variable=self.placement_var, value=False).pack(side="left")
+        # --- END PROMPT PANEL ---
 
-        size_pane = tk.LabelFrame(settings_container, text="Quality", padx=10, pady=10)
-        size_pane.pack(side="left", fill="both", expand=True, padx=(0, 5))
-        ttk.Radiobutton(size_pane, text="Standard", variable=self.quality_var, value="standard").pack(side="left", padx=5)
-        ttk.Radiobutton(size_pane, text="HD", variable=self.quality_var, value="hd").pack(side="left", padx=5)
-
-        aspect_pane = tk.LabelFrame(settings_container, text="Aspect Ratio", padx=10, pady=10)
-        aspect_pane.pack(side="left", fill="both", expand=True, padx=(5, 0))
-        ttk.Radiobutton(aspect_pane, text="Square", variable=self.size_var, value="1024x1024").pack(side="left", padx=5)
-        ttk.Radiobutton(aspect_pane, text="Portrait", variable=self.size_var, value="1024x1792").pack(side="left", padx=5)
-        ttk.Radiobutton(aspect_pane, text="Landscape", variable=self.size_var, value="1792x1024").pack(side="left", padx=5)
-
-        # --- ARTISTIC CONTROLS (Style Only) ---
-        art_pane = tk.LabelFrame(left_frame, text="Artistic Controls", padx=10, pady=10)
-        art_pane.pack(fill="x", pady=10)
-
-        tk.Label(art_pane, text="In The Style Of:").grid(row=0, column=0, sticky="w")
-        self.style_entry = tk.Entry(art_pane, textvariable=self.style_var)
-        self.style_entry.grid(row=0, column=1, sticky="ew", padx=5)
-        art_pane.columnconfigure(1, weight=1)
-
-        # --- PROMPT INPUT WITH SCROLLBAR ---
-        tk.Label(left_frame, text="Prompt:", font=("Arial", 10, "bold")).pack(anchor="w", pady=(10, 0))
-        prompt_container = tk.Frame(left_frame)
-        prompt_container.pack(fill="x", pady=5)
+        # Action Buttons
+        btn_frame = tk.Frame(self.left_frame)
+        btn_frame.pack(fill="x", pady=10)
         
-        self.prompt_text = tk.Text(prompt_container, height=4, wrap="word")
-        self.prompt_scroll = tk.Scrollbar(prompt_container, command=self.prompt_text.yview)
-        self.prompt_text.configure(yscrollcommand=self.prompt_scroll.set)
+        self.gen_btn = tk.Button(btn_frame, text="Generate", command=self.start_generation, bg="#4CAF50", fg="white", width=15)
+        self.gen_btn.pack(side="left", padx=5)
+
+        self.save_btn = tk.Button(btn_frame, text="Save Current", command=self.save_image, width=15)
+        self.save_btn.pack(side="left")
+
+        # Progress Bar
+        self.progress = ttk.Progressbar(self.left_frame, mode='indeterminate')
+        self.progress.pack(fill="x", pady=5)
+
+        # Image Display
+        self.image_label = tk.Label(self.left_frame, text="Generated image will appear here", bg="#f0f0f0")
+        self.image_label.pack(fill="both", expand=True)
+
+    def create_right_widgets(self):
+        tk.Label(self.right_frame, text="Session History", font=("Arial", 12, "bold")).pack(pady=5)
+        self.history_list = tk.Listbox(self.right_frame)
+        self.history_list.pack(fill="both", expand=True)
+        self.history_list.bind('<<ListboxSelect>>', self.load_history_item)
+
+        tk.Button(self.right_frame, text="Clear History", command=self.clear_history).pack(fill="x", pady=5)
+
+    def get_combined_prompt(self):
+        style = self.style_input.get("1.0", tk.END).strip()
+        subject = self.subject_input.get("1.0", tk.END).strip()
         
-        self.prompt_scroll.pack(side="right", fill="y")
-        self.prompt_text.pack(side="left", fill="x", expand=True)
+        if not style: return subject
+        if not subject: return style
 
-        btn_frame = tk.Frame(left_frame)
-        btn_frame.pack(fill="x")
-        self.gen_button = tk.Button(btn_frame, text="Generate", command=self.on_generate_click, bg="#28a745", fg="white", width=15)
-        self.gen_button.pack(side="left", padx=5)
-        self.save_button = tk.Button(btn_frame, text="Save Current", command=self.save_image, bg="#007BFF", fg="white", width=15, state="disabled")
-        self.save_button.pack(side="left", padx=5)
+        if self.placement_var.get():
+            return f"{style}, {subject}"
+        else:
+            return f"{subject}, {style}"
 
-        self.progress = ttk.Progressbar(left_frame, mode="indeterminate")
-        self.progress.pack(fill="x", pady=10)
-
-        self.image_display = tk.Label(left_frame, bg="#333333", height=25)
-        self.image_display.pack(fill="both", expand=True)
-
-        # RIGHT SIDE: History
-        right_frame = tk.Frame(self.paned, padx=10, pady=10, bg="#f8f9fa")
-        self.paned.add(right_frame, width=400)
-
-        tk.Label(right_frame, text="Session History", font=("Arial", 12, "bold"), bg="#f8f9fa").pack()
-        self.history_listbox = tk.Listbox(right_frame, font=("Arial", 9))
-        self.history_listbox.pack(fill="both", expand=True, pady=5)
-        self.history_listbox.bind("<<ListboxSelect>>", self.on_history_select)
-
-        tk.Label(right_frame, text="Selected Full Prompt:", font=("Arial", 9, "bold"), bg="#f8f9fa").pack(anchor="w")
-        self.history_prompt_display = tk.Text(right_frame, height=6, bg="#e9ecef", wrap="word")
-        self.history_prompt_display.pack(fill="x", pady=(0, 5))
+    def start_generation(self):
+        api_key = self.api_key_entry.get().strip()
+        if not api_key:
+            messagebox.showerror("Error", "Please enter an OpenAI API Key")
+            return
         
-        self.copy_to_input_btn = tk.Button(right_frame, text="Copy to Prompt Input", command=self.copy_history_to_input)
-        self.copy_to_input_btn.pack(fill="x", pady=(0, 10))
-        
-        self.clear_button = tk.Button(right_frame, text="Clear History", command=self.clear_history, bg="#dc3545", fg="white")
-        self.clear_button.pack(fill="x", pady=5)
+        prompt = self.get_combined_prompt()
+        if not prompt:
+            messagebox.showwarning("Warning", "Prompt cannot be empty")
+            return
 
-    def handle_error(self, error_msg):
-        self.progress.stop()
-        self.gen_button.config(state="normal")
-        messagebox.showerror("Error", error_msg)
+        self.gen_btn.config(state="disabled")
+        self.progress.start()
+        threading.Thread(target=self.run_generation, args=(api_key, prompt)).start()
 
-    def on_generate_click(self):
-        api_key = self.api_entry.get().strip()
-        user_prompt = self.prompt_text.get("1.0", tk.END).strip()
-        style_prefix = self.style_var.get().strip()
-        
-        if not api_key or not user_prompt: return
-
-        full_prompt = f"{style_prefix} {user_prompt}".strip() if style_prefix else user_prompt
-        self.gen_button.config(state="disabled")
-        self.progress.start(10)
-        
-        # Pass both the full prompt (for the API) and original prompt (for the listbox)
-        threading.Thread(target=self.generate_image, args=(api_key, full_prompt, user_prompt)).start()
-
-    def generate_image(self, api_key, full_prompt, original_prompt):
+    def run_generation(self, api_key, prompt):
         try:
-            client = OpenAI(api_key=api_key)
-            params = {
-                "model": "dall-e-3", 
-                "prompt": full_prompt, 
-                "size": self.size_var.get(), 
-                "quality": self.quality_var.get(), 
-                "n": 1
-            }
-
-            response = client.images.generate(**params)
-            raw_data = requests.get(response.data[0].url).content
+            client = openai.OpenAI(api_key=api_key)
+            response = client.images.generate(
+                model="dall-e-3",
+                prompt=prompt,
+                size=self.size_var.get(),
+                quality=self.quality_var.get(),
+                n=1,
+            )
             
-            img = Image.open(BytesIO(raw_data))
-            img.thumbnail((650, 500), Image.Resampling.LANCZOS)
-            photo = ImageTk.PhotoImage(img)
-
-            # Store full_prompt for reproduction and original_prompt for display
-            new_entry = {
-                "full_prompt": full_prompt, 
-                "original_prompt": original_prompt, 
-                "photo": photo, 
-                "raw": raw_data
-            }
-            self.history.insert(0, new_entry)
-            self.root.after(0, self.update_ui_with_new, new_entry)
+            image_url = response.data[0].url
+            img_data = requests.get(image_url).content
+            img = Image.open(io.BytesIO(img_data))
+            
+            self.root.after(0, self.update_ui_with_image, img, prompt)
         except Exception as e:
-            error_str = str(e)
-            self.root.after(0, lambda: self.handle_error(error_str))
+            self.root.after(0, lambda: messagebox.showerror("API Error", str(e)))
+        finally:
+            self.root.after(0, self.stop_progress)
 
-    def update_ui_with_new(self, entry):
+    def update_ui_with_image(self, img, prompt):
+        self.current_image = img
+        # Scale image to fit display area
+        display_img = img.copy()
+        display_img.thumbnail((600, 600))
+        photo = ImageTk.PhotoImage(display_img)
+        
+        self.image_label.config(image=photo, text="")
+        self.image_label.image = photo
+        
+        # Update history
+        self.history.append({"prompt": prompt, "image": img})
+        self.history_list.insert(0, prompt[:40] + "...")
+
+    def stop_progress(self):
         self.progress.stop()
-        self.gen_button.config(state="normal")
-        self.save_button.config(state="normal")
-        
-        # Omit the "In The Style Of" prefix by using only the original_prompt
-        display_text = entry['original_prompt'][:35]
-        self.history_listbox.insert(0, f"[{len(self.history)}] {display_text}...")
-        self.display_entry(entry)
+        self.gen_btn.config(state="normal")
 
-    def on_history_select(self, event):
-        selection = self.history_listbox.curselection()
-        if selection: self.display_entry(self.history[selection[0]])
-
-    def display_entry(self, entry):
-        self.image_display.config(image=entry["photo"])
-        self.image_display.image = entry["photo"]
-        self.current_img_data = entry["raw"]
-        
-        # Continue to show the full prompt in the read-only display for easy copying
-        self.history_prompt_display.delete("1.0", tk.END)
-        self.history_prompt_display.insert("1.0", entry["full_prompt"])
-
-    def copy_history_to_input(self):
-        text = self.history_prompt_display.get("1.0", tk.END).strip()
-        if text:
-            self.prompt_text.delete("1.0", tk.END)
-            self.prompt_text.insert("1.0", text)
-            self.style_var.set("")
-
-    def clear_history(self):
-        if messagebox.askyesno("Clear History", "Delete all generated images in this session?"):
-            self.history.clear()
-            self.history_listbox.delete(0, tk.END)
-            self.image_display.config(image="", text="History Cleared")
-            self.image_display.image = None
-            self.history_prompt_display.delete("1.0", tk.END)
-            self.save_button.config(state="disabled")
+    def load_history_item(self, event):
+        selection = self.history_list.curselection()
+        if selection:
+            index = len(self.history) - 1 - selection[0]
+            item = self.history[index]
+            self.current_image = item["image"]
+            
+            display_img = self.current_image.copy()
+            display_img.thumbnail((600, 600))
+            photo = ImageTk.PhotoImage(display_img)
+            self.image_label.config(image=photo)
+            self.image_label.image = photo
 
     def save_image(self):
-        if not self.current_img_data: return
-        path = filedialog.asksaveasfilename(defaultextension=".png")
-        if path:
-            with open(path, "wb") as f: f.write(self.current_img_data)
+        if self.current_image:
+            file_path = filedialog.asksaveasfilename(defaultextension=".png", filetypes=[("PNG files", "*.png")])
+            if file_path:
+                self.current_image.save(file_path)
+                messagebox.showinfo("Saved", f"Image saved to {file_path}")
+
+    def clear_history(self):
+        self.history = []
+        self.history_list.delete(0, tk.END)
+        self.image_label.config(image="", text="History cleared")
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = DalleApp(root)
+    app = Dalle3Studio(root)
     root.mainloop()
