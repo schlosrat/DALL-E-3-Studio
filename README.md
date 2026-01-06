@@ -1,10 +1,11 @@
 # DALL-E 3 Studio
-[![Example GUI screenshot](Images/2025-12-24_10_17_47-DALL-E_3_Studio.png)](Images/2025-12-24_10_17_47-DALL-E_3_Studio.png)
+[![Example GUI screenshot](Images/2026-01-06_07_56_33-DALL-E_3_Studio.png)](Images/2026-01-06_07_56_33-DALL-E_3_Studio.png)
 A lightweight Python-based desktop application that provides a graphical user interface (GUI) for generating images using OpenAI's DALL-E 3 model. This tool allows users to customize image quality, aspect ratio, manage session history, and save high-resolution images locally.
 
 ## Features
 * **Customizable Generation:** Toggle between Standard and HD quality.
 * **Multiple Aspect Ratios:** Support for Square (1:1), Portrait (9:16), and Landscape (16:9).
+* **Artistic Style Controls:** Have a consistent style prompt that is combined with the subject prompt to generate more consistent images
 * **Session History:** Automatically tracks prompts and images generated during the current session.
 * **Local Saving:** Save high-resolution PNG files directly to your computer.
 * **Real-time Feedback:** Includes an indeterminate progress bar and status updates during the generation process.
