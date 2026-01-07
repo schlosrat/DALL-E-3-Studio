@@ -1,5 +1,5 @@
 # DALL-E 3 Studio
-[![Example GUI screenshot](Images/2026-01-06_10_21_09-DALL-E_3_Studio_in_use.png)](Images/2026-01-06_10_21_09-DALL-E_3_Studio_in_use.png)
+[![Example GUI screenshot](Images/2026-01-07_08_20_46-DALL-E_3_Studio_in_use.png)](Images/2026-01-07_08_20_46-DALL-E_3_Studio_in_use.png)
 A lightweight Python-based desktop application that provides a graphical user interface (GUI) for generating images using OpenAI's DALL-E 3 model. This tool allows users to customize image quality, aspect ratio, manage session history, and save high-resolution images locally.
 
 ## Features
@@ -80,22 +80,25 @@ python3 main.py
 ```
 
 Launching the application should result in presenting a UI like this one, where the only information already present is a default text in the Artistic Style Block. From here, the user must paste in a valid API key and supply a Subject Description. Optionally, they may also change the settings for image Quality, Aspect Ratio, Artistic Style Block, and Style Placement in the constructed prompt before pressing the Generate button.
+
 [![Example GUI screenshot](Images/2026-01-06_13_45_56-DALL-E_3_Studio_pre_use.png)](Images/2026-01-06_13_45_56-DALL-E_3_Studio_pre_use.png)
 
 ## Using the Interface
 The GUI is divided into two main sections: Generation Controls (Left) and Session History (Right).
 
 ### Generation Controls
-* **API Key:** Enter your OpenAI Secret Key here. Characters are masked for security.
-* **Size Pane:** Choose between Standard (faster/cheaper) and HD (greater detail).
-* **Aspect Ratio Pane:** Select your desired output format (Square, Portrait, or Landscape).
-* **In The Style Of:** Enter any optional style directive text to be prepended to the prompt describing the subject/image. E.g., "An oil painting of ", "An image in the style of [a well-known artist] depicting ", etc.
-* **Prompt:** Enter a detailed description of the image you want to create. This text will follow any style directive text entered above.
+* **OpenAI API Key:** Enter your OpenAI Secret Key here. Characters are masked for security.
+* **Quality:** Choose between Standard (faster/cheaper) and HD (greater detail).
+* **Aspect Ratio:** Select your desired output format (Square, Portrait, or Landscape).
+* **Prompt Panel:** The set of user inputs controlling what the prompt will include and how it will be assembled.
+    * **Artistic Style Block:** Enter any optional style directive text to be combined with the **Subject Description** when constructing the prompt. E.g., "An oil painting of ", "An image in the style of [a well-known artist] depicting ", etc.
+    * **Subject Description:** Enter a detailed description of the image you want to create. This text will follow any style directive text entered above.
+    * **Style Placement:** Select either **Leading** or **Trailing** to control the relative influence of the **Artistic Style Block** vs. the **Subject Description**
 * **Generate:** Click to start. The Progress Bar will indicate active generation.
 * **Save Current:** Saves the currently displayed image as a PNG file.
 
-### In The Style Of
-This input field allows the user to include style notes that will be used at the start of the prompt, which are separate from the detailed description of the desired image content in the Prompt field. This part of the prompt can be used when you wish to generate multiple images in a consistent style so that you only need to make changes to the Prompt input field to get different subjects in a more or less consistent style. As with any prompt to an AI tool, the better you can describe the style you want, the more likely you'll be to get a consistent output. Nevertheless, using the same text in both the In The Style Of and the Prompt input fields will still generate different images each time you press the Generate button.
+### Artistic Style Block
+This input field allows the user to include style notes that will be used as part of the prompt. This text is separate from the subject description of the desired image content, enabling the user to more easily generate different images with a similar style by reusing the style text with different subject descriptions. As with any prompt to an AI tool, the better you can describe the style you want, the more likely you'll be to get a consistent output. Nevertheless, using the same text in both the Artistic Style Block and the Subject Description input fields will still generate different images each time you press the Generate button.
 
 #### Well-Known Artist Examples:
 * Classic & Foundational Artists (70s-90s)
@@ -113,9 +116,15 @@ This input field allows the user to include style notes that will be used at the
     * Todd Lockwood: Known for dragons and rich fantasy illustrations, particularly for Forgotten Realms.
     * Miguel Coimbra & Carl Critchlow: Prominent figures in modern publishing, working across many systems.
 
+### Style Placement
+By default, the **Artistic Style Block** will be prepended to the **Subject Description** when constructing the **Full Combined Prompt**. This has the effect of placing greater emphasis on style consistency, as DALL-E 3 (and other generative AI models) place greater importance on adhering to the prompt guidance for text at or near the beginning of the prompt. If ensuring a more literal interpretation of the subject description is desired over having artistic style consistency, then the user may wish to select **Trailing** which has the effect of appending the **Artistic Style Block** to the **Subject Description** when constructing the **Full Combined Prompt**.
+
 ### Session History
 * **History List:** Every successful generation is added here. Clicking an entry reloads that image and its original prompt.
 * **Clear History:** Permanently removes all entries from the current session.
+
+### Full Combined Prompt Used
+This panel displays either the most recent full combined prompt used for the current image generated or that of the Session History item selected, if a session history item has been selected.
 
 ## Cost Estimation
 
