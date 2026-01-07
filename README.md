@@ -5,10 +5,10 @@ A lightweight Python-based desktop application that provides a graphical user in
 ## Features
 * **Customizable Generation:** Toggle between Standard and HD quality.
 * **Multiple Aspect Ratios:** Support for Square (1:1), Portrait (9:16), and Landscape (16:9).
-* **Artistic Style Controls:** Have a consistent style prompt that is combined with the subject prompt to generate more consistent images
-* **Session History:** Automatically tracks prompts and images generated during the current session.
+* **Artistic Style Controls:** Specify a style text block that is combined with the subject description text to construct the prompt used for image generation
+* **Session History:** Automatically tracks prompts and images generated during the current session. Select a previous item from the list to see the full prompt and resulting image.
 * **Local Saving:** Save high-resolution PNG files directly to your computer.
-* **Real-time Feedback:** Includes an indeterminate progress bar and status updates during the generation process.
+* **Security**: No retention of your OpenAI API Key.
 
 ## Prerequisites
 1. Install Python: *Ensure you have Python 3.8 or higher installed.*
@@ -88,14 +88,14 @@ The GUI is divided into two main sections: Generation Controls (Left) and Sessio
 
 ### Generation Controls
 * **OpenAI API Key:** Enter your OpenAI Secret Key here. Characters are masked for security.
-* **Quality:** Choose between Standard (faster/cheaper) and HD (greater detail).
-* **Aspect Ratio:** Select your desired output format (Square, Portrait, or Landscape).
+* **Quality Panel:** Choose between Standard (faster/cheaper) and HD (greater detail).
+* **Aspect Ratio Panel:** Select your desired output format (Square, Portrait, or Landscape).
 * **Prompt Panel:** The set of user inputs controlling what the prompt will include and how it will be assembled.
     * **Artistic Style Block:** Enter any optional style directive text to be combined with the **Subject Description** when constructing the prompt. E.g., "An oil painting of ", "An image in the style of [a well-known artist] depicting ", etc.
     * **Subject Description:** Enter a detailed description of the image you want to create. This text will follow any style directive text entered above.
     * **Style Placement:** Select either **Leading** or **Trailing** to control the relative influence of the **Artistic Style Block** vs. the **Subject Description**
-* **Generate:** Click to start. The Progress Bar will indicate active generation.
-* **Save Current:** Saves the currently displayed image as a PNG file.
+* **Generate Button:** Click to start. The Progress Bar will indicate active generation.
+* **Save Current Button:** Saves the currently displayed image as a PNG file.
 
 ### Artistic Style Block
 This input field allows the user to include style notes that will be used as part of the prompt. This text is separate from the subject description of the desired image content, enabling the user to more easily generate different images with a similar style by reusing the style text with different subject descriptions. As with any prompt to an AI tool, the better you can describe the style you want, the more likely you'll be to get a consistent output. Nevertheless, using the same text in both the Artistic Style Block and the Subject Description input fields will still generate different images each time you press the Generate button.
