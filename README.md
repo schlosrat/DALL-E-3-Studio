@@ -1,5 +1,5 @@
 # DALL-E 3 Studio
-[![Example GUI screenshot](Images/2026-01-06_07_56_33-DALL-E_3_Studio.png)](Images/2026-01-06_07_56_33-DALL-E_3_Studio.png)
+[![Example GUI screenshot](Images/2026-01-06_10_21_09-DALL-E_3_Studio_in_use.png)](Images/2026-01-06_10_21_09-DALL-E_3_Studio_in_use.png)
 A lightweight Python-based desktop application that provides a graphical user interface (GUI) for generating images using OpenAI's DALL-E 3 model. This tool allows users to customize image quality, aspect ratio, manage session history, and save high-resolution images locally.
 
 ## Features
@@ -78,6 +78,10 @@ Bash
 ```
 python3 main.py
 ```
+
+Launching the application should result in presenting a UI like this one, where the only information already present is a default text in the Artistic Style Block. From here, the user must paste in a valid API key and supply a Subject Description. Optionally, they may also change the settings for image Quality, Aspect Ratio, Artistic Style Block, and Style Placement in the constructed prompt before pressing the Generate button.
+[![Example GUI screenshot](Images/2026-01-06_13_45_56-DALL-E_3_Studio_pre_use.png)](Images/2026-01-06_13_45_56-DALL-E_3_Studio_pre_use.png)
+
 ## Using the Interface
 The GUI is divided into two main sections: Generation Controls (Left) and Session History (Right).
 
