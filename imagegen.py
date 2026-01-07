@@ -88,9 +88,9 @@ class Dalle3Studio:
         self.image_label.pack(fill="both", expand=True)
 
         # --- RESTORED: FULL PROMPT DISPLAY ---
-        tk.Label(self.left_frame, text="Full Combined Prompt Used:", font=("Arial", 9, "bold")).pack(anchor="w", pady=(10, 0))
-        self.full_prompt_display = scrolledtext.ScrolledText(self.left_frame, height=3, font=("Consolas", 9), bg="#f8f8f8", state="disabled")
-        self.full_prompt_display.pack(fill="x", pady=5)
+        # tk.Label(self.left_frame, text="Full Combined Prompt Used:", font=("Arial", 9, "bold")).pack(anchor="w", pady=(10, 0))
+        # self.full_prompt_display = scrolledtext.ScrolledText(self.left_frame, height=3, font=("Consolas", 9), bg="#f8f8f8", state="disabled")
+        # self.full_prompt_display.pack(fill="x", pady=5)
 
     def create_right_widgets(self):
         tk.Label(self.right_frame, text="Session History", font=("Arial", 12, "bold")).pack(pady=5)
@@ -98,6 +98,12 @@ class Dalle3Studio:
         self.history_list = tk.Listbox(self.right_frame, font=("Arial", 10))
         self.history_list.pack(fill="both", expand=True, pady=5)
         self.history_list.bind('<<ListboxSelect>>', self.load_history_item)
+
+        # --- RESTORED: FULL PROMPT DISPLAY ---
+        tk.Label(self.right_frame, text="Full Combined Prompt Used:", font=("Arial", 9, "bold")).pack(anchor="w", pady=(10, 0))
+        self.full_prompt_display = scrolledtext.ScrolledText(self.right_frame, height=3, font=("Consolas", 9), bg="#f8f8f8", state="disabled")
+        self.full_prompt_display.pack(fill="x", pady=5)
+
         tk.Button(self.right_frame, text="Clear History", command=self.clear_history).pack(fill="x", pady=5)
 
     def get_combined_prompt(self):
