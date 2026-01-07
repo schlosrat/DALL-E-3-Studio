@@ -139,7 +139,9 @@ class Dalle3Studio:
             
             self.root.after(0, self.update_ui_with_image, img, full_prompt, style, subject, placement)
         except Exception as e:
-            self.root.after(0, lambda: messagebox.showerror("API Error", str(e)))
+            # self.root.after(0, lambda: messagebox.showerror("API Error", str(e)))
+            # Adding 'e=e' captures the exception object immediately
+            self.root.after(0, lambda e=e: messagebox.showerror("API Error", str(e)))
         finally:
             self.root.after(0, self.stop_progress)
 
